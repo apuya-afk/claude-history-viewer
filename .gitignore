@@ -1,0 +1,31 @@
+# Sensitive data - NEVER commit
+*.jsonl
+exports/
+saved/
+*.env
+.env*
+secrets/
+credentials/
+**/api_key*
+**/apikey*
+**/*secret*
+**/*token*
+**/*password*
+**/*credential*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node (if extending later)
+node_modules/
+npm-debug.log
+
+# Logs
+*.log

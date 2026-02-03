@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <title>Claude Code History</title>
+    <style>
+        /* Modern CSS with custom properties and animations */
+        :root {
+            --bg-primary: #0d0d12;
+            --bg-secondary: #13131a;
+            --bg-tertiary: #1a1a24;
+            --bg-elevated: #22222e;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.3);
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --user-bg: linear-gradient(135deg, #1e3a5f 0%, #2d4a7c 100%);
+            --assistant-bg: linear-gradient(135deg, #1a1a2e 0%, #252540 100%);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 15px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn var(--transition-normal) ease-out forwards;
+        }
+
+        .animate-slide-in {
+            animation: slideIn var(--transition-normal) ease-out forwards;
+        }
+
+        /* Layout */
+        .app {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Header Banner */
+        .banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(90deg, var(--accent) 0%, #8b5cf6 100%);
+            padding: 8px 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            letter-spacing: 0.02em;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .logo h1 {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn:hover {
+            background: var(--bg-elevated);
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
+            border: none;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            border: none;
+            box-shadow: 0 4px 12px var(--success-glow);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 6px 20px var(--success-glow);
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* File Input */
+        .file-input {
+            display: none;
+        }
+
+        /* Session List */
+        .session-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--bg-elevated) transparent;
+        }
+
+        .session-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .session-list::-webkit-scrollbar-thumb {
+            background: var(--bg-elevated);
+            border-radius: 3px;
+        }
+
+        .session-item {
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .session-item:hover {
+            background: var(--bg-elevated);
+            border-color: var(--border-hover);
+            transform: translateX(4px);
+        }
+
+        .session-item.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .session-date {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .session-preview {
+            font-size: 13px;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 6px;
+        }
+
+        .session-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .session-meta-badge {
+            background: var(--bg-primary);
+            padding: 2px 8px;
+            border-radius: 100px;
+            font-size: 10px;
+        }
+
+        /* Main Content */
+        .main {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-primary);
+        }
+
+        /* Toolbar */
+        .toolbar {
+            padding: 16px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-btn {
+            padding: 8px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        .toolbar-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+
+        .toolbar-spacer {
+            flex: 1;
+        }
+
+        .search-input {
+            padding: 8px 14px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 13px;
+            width: 220px;
+            transition: all var(--transition-fast);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            padding: 10px 24px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 24px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-value {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Messages Container */
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--bg-elevated) transparent;
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: var(--bg-elevated);
+            border-radius: 4px;
+        }
+
+        /* Message Bubbles */
+        .message {
+            margin-bottom: 20px;
+            padding: 18px 20px;
+            border-radius: var(--radius-lg);
+            max-width: 85%;
+            position: relative;
+        }
+
+        .message.user {
+            background: var(--user-bg);
+            margin-left: auto;
+            border-bottom-right-radius: var(--radius-sm);
+        }
+
+        .message.assistant {
+            background: var(--assistant-bg);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: var(--radius-sm);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .message-role {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--accent);
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .message-content {
+            font-size: 14px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .message-content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 13px;
+        }
+
+        .message-content pre {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            margin: 12px 0;
+            border: 1px solid var(--border);
+        }
+
+        .message-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        /* Thinking Block */
+        .thinking-block {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid var(--warning);
+            padding: 12px 16px;
+            margin: 12px 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .thinking-block summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--warning);
+            padding: 4px 0;
+            transition: color var(--transition-fast);
+        }
+
+        .thinking-block summary:hover {
+            color: #fbbf24;
+        }
+
+        .thinking-block[open] summary {
+            margin-bottom: 10px;
+        }
+
+        /* Tool Use Block */
+        .tool-block {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 3px solid var(--success);
+            padding: 12px 16px;
+            margin: 12px 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .tool-header {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--success);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-block pre {
+            margin: 0;
+            font-size: 12px;
+        }
+
+        /* Redacted */
+        .redacted {
+            background: var(--danger);
+            color: white;
+            padding: 1px 6px;
+            border-radius: var(--radius-sm);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 40px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h2 {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            max-width: 300px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn var(--transition-fast) ease-out;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 28px;
+            border-radius: var(--radius-lg);
+            max-width: 480px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+            animation: scaleIn var(--transition-normal) ease-out;
+        }
+
+        .modal h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .modal-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .modal-option:hover {
+            background: var(--bg-elevated);
+        }
+
+        .modal-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        .modal-option label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="banner">
+            Local-only viewer • No data sent externally • Press Ctrl+C in terminal to stop
+        </div>
+
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <h1>Claude History</h1>
+                </div>
+                <div class="btn-group">
+                    <input type="file" id="fileInput" class="file-input" accept=".jsonl" multiple>
+                    <label for="fileInput" class="btn btn-primary">
+                        <span>📁</span> Load JSONL Files
+                    </label>
+                    <button class="btn" id="loadDefaultBtn">
+                        <span>🔄</span> Refresh Sessions
+                    </button>
+                    <button class="btn btn-success" id="backupAllBtn">
+                        <span>💾</span> Backup All
+                    </button>
+                </div>
+            </div>
+            <div class="session-list" id="sessionList">
+                <div class="empty-state">
+                    <p>Loading sessions...</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="toolbar">
+                <button class="toolbar-btn active" id="toggleThinking">
+                    <span>💭</span> Thinking
+                </button>
+                <button class="toolbar-btn" id="toggleTools">
+                    <span>🔧</span> Tools
+                </button>
+                <button class="toolbar-btn active" id="toggleRedact">
+                    <span>🔒</span> Redact
+                </button>
+                <div class="toolbar-spacer"></div>
+                <input type="text" class="search-input" id="searchBox" placeholder="Search messages...">
+                <button class="toolbar-btn" id="exportBtn">
+                    <span>📤</span> Export
+                </button>
+            </div>
+
+            <div class="stats-bar" id="statsBar" style="display: none;">
+                <div class="stat">
+                    <span>Messages:</span>
+                    <span class="stat-value" id="messageCount">0</span>
+                </div>
+                <div class="stat">
+                    <span>Tokens:</span>
+                    <span class="stat-value" id="tokenCount">0</span>
+                </div>
+                <div class="stat">
+                    <span>Duration:</span>
+                    <span class="stat-value" id="sessionDuration">—</span>
+                </div>
+            </div>
+
+            <div class="messages" id="messagesContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📜</div>
+                    <h2>Claude Code History Viewer</h2>
+                    <p>Select a session from the sidebar to view the conversation</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal">
+            <h2>Export Conversation</h2>
+            <div class="modal-option">
+                <input type="checkbox" id="exportIncludeThinking">
+                <label for="exportIncludeThinking">Include thinking blocks</label>
+            </div>
+            <div class="modal-option">
+                <input type="checkbox" id="exportIncludeTools">
+                <label for="exportIncludeTools">Include tool calls</label>
+            </div>
+            <div class="modal-option">
+                <input type="checkbox" id="exportRedact" checked>
+                <label for="exportRedact">Redact potential secrets</label>
+            </div>
+            <div class="modal-option">
+                <input type="checkbox" id="exportMetadata">
+                <label for="exportMetadata">Include timestamps & metadata</label>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="cancelExport">Cancel</button>
+                <button class="btn btn-primary" id="confirmExport">Markdown</button>
+                <button class="btn btn-primary" id="confirmExportJson">JSON</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // ============================================
+        // State Management
+        // ============================================
+        const state = {
+            sessions: [],
+            currentSession: null,
+            showThinking: true,
+            showTools: false,
+            redactSecrets: true,
+            isServerMode: window.location.protocol.startsWith('http')
+        };
+
+        // ============================================
+        // Security: Secret Detection Patterns
+        // ============================================
+        const SENSITIVE_PATTERNS = [
+            /\b(sk-[a-zA-Z0-9]{20,})\b/g,
+            /\b(api[_-]?key[s]?[\s:=]+['"]?)([a-zA-Z0-9_\-]{20,})(['"]?)/gi,
+            /\b(token[\s:=]+['"]?)([a-zA-Z0-9_\-\.]{20,})(['"]?)/gi,
+            /\b(secret[\s:=]+['"]?)([a-zA-Z0-9_\-]{16,})(['"]?)/gi,
+            /\b(password[\s:=]+['"]?)([^\s'"]{8,})(['"]?)/gi,
+            /\b(bearer\s+)([a-zA-Z0-9_\-\.]+)/gi,
+            /\b(AKIA[0-9A-Z]{16})\b/g,
+            /\b(aws[_-]?secret[_-]?access[_-]?key[\s:=]+['"]?)([a-zA-Z0-9\/+=]{40})(['"]?)/gi,
+            /\b(ghp_[a-zA-Z0-9]{36})\b/g,
+            /\b(gho_[a-zA-Z0-9]{36})\b/g,
+            /\b(github_pat_[a-zA-Z0-9_]{22,})\b/g,
+            /-----BEGIN [A-Z]+ PRIVATE KEY-----[\s\S]*?-----END [A-Z]+ PRIVATE KEY-----/g,
+            /\b(mongodb(\+srv)?:\/\/[^\s]+)/gi,
+            /\b(postgres(ql)?:\/\/[^\s]+)/gi,
+            /\b(mysql:\/\/[^\s]+)/gi,
+            /\b(redis:\/\/[^\s]+)/gi,
+            /\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/g,
+            /\b(10\.\d{1,3}\.\d{1,3}\.\d{1,3})\b/g,
+            /\b(192\.168\.\d{1,3}\.\d{1,3})\b/g,
+            /\b(172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})\b/g,
+        ];
+
+        // ============================================
+        // DOM Elements
+        // ============================================
+        const elements = {
+            fileInput: document.getElementById('fileInput'),
+            loadDefaultBtn: document.getElementById('loadDefaultBtn'),
+            backupAllBtn: document.getElementById('backupAllBtn'),
+            sessionList: document.getElementById('sessionList'),
+            messagesContainer: document.getElementById('messagesContainer'),
+            toggleThinking: document.getElementById('toggleThinking'),
+            toggleTools: document.getElementById('toggleTools'),
+            toggleRedact: document.getElementById('toggleRedact'),
+            searchBox: document.getElementById('searchBox'),
+            exportBtn: document.getElementById('exportBtn'),
+            exportModal: document.getElementById('exportModal'),
+            statsBar: document.getElementById('statsBar'),
+            messageCount: document.getElementById('messageCount'),
+            tokenCount: document.getElementById('tokenCount'),
+            sessionDuration: document.getElementById('sessionDuration'),
+        };
+
+        // ============================================
+        // Utility Functions
+        // ============================================
+        const escapeHtml = (text) => {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+
+        const redactSensitive = (text) => {
+            if (!state.redactSecrets || !text) return text;
+            let redacted = text;
+            SENSITIVE_PATTERNS.forEach(pattern => {
+                redacted = redacted.replace(pattern, (match) => {
+                    if (match.length > 12) {
+                        return `${match.slice(0, 4)}<span class="redacted">REDACTED</span>${match.slice(-4)}`;
+                    }
+                    return '<span class="redacted">REDACTED</span>';
+                });
+            });
+            return redacted;
+        };
+
+        const formatContent = (text) => {
+            if (!text) return '';
+            let formatted = escapeHtml(text);
+            formatted = redactSensitive(formatted);
+            formatted = formatted.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+            formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
+            return formatted;
+        };
+
+        const downloadFile = (content, filename, type) => {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+
+        // ============================================
+        // API Functions
+        // ============================================
+        const api = {
+            async loadSessions() {
+                try {
+                    const response = await fetch('/api/sessions');
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error);
+                    return data.sessions || [];
+                } catch (e) {
+                    console.warn('Server API unavailable:', e);
+                    return null;
+                }
+            },
+
+            async loadSession(path) {
+                try {
+                    const response = await fetch(`/api/session?path=${encodeURIComponent(path)}`);
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error);
+                    return data.messages;
+                } catch (e) {
+                    console.error('Failed to load session:', e);
+                    return null;
+                }
+            },
+
+            async backupAll() {
+                const response = await fetch('/api/backup-all');
+                return response.json();
+            }
+        };
+
+        // ============================================
+        // JSONL Parser
+        // ============================================
+        const parseJSONL = (content, filename) => {
+            const lines = content.trim().split('\n');
+            const messages = [];
+            let sessionInfo = null;
+
+            for (const line of lines) {
+                try {
+                    const obj = JSON.parse(line);
+                    if (obj.type === 'user' || obj.type === 'assistant') {
+                        messages.push(obj);
+                        if (!sessionInfo && obj.sessionId) {
+                            sessionInfo = {
+                                id: obj.sessionId,
+                                cwd: obj.cwd,
+                                version: obj.version,
+                                branch: obj.gitBranch
+                            };
+                        }
+                    }
+                } catch (e) {
+                    // Skip invalid lines
+                }
+            }
+
+            return { messages, sessionInfo, filename };
+        };
+
+        // ============================================
+        // Rendering Functions
+        // ============================================
+        const renderSessionList = () => {
+            if (state.sessions.length === 0) {
+                elements.sessionList.innerHTML = `
+                    <div class="empty-state">
+                        <p>No sessions found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            elements.sessionList.innerHTML = state.sessions.map((session, idx) => {
+                let preview, date, msgCount;
+
+                if (session.sessionInfo?.preview) {
+                    preview = session.sessionInfo.preview.slice(0, 50);
+                    date = session.sessionInfo.timestamp
+                        ? new Date(session.sessionInfo.timestamp).toLocaleString()
+                        : 'Unknown';
+                    msgCount = session.sessionInfo.messageCount || session.messages.length;
+                } else {
+                    const firstMsg = session.messages.find(m => m.type === 'user');
+                    preview = firstMsg?.message?.content?.slice(0, 50) || 'Empty';
+                    date = session.messages[0]?.timestamp
+                        ? new Date(session.messages[0].timestamp).toLocaleString()
+                        : 'Unknown';
+                    msgCount = session.messages.length;
+                }
+
+                return `
+                    <div class="session-item ${idx === state.currentSession ? 'active' : ''}" data-idx="${idx}">
+                        <div class="session-date">${date}</div>
+                        <div class="session-preview">${escapeHtml(preview)}...</div>
+                        <div class="session-meta">
+                            <span class="session-meta-badge">${msgCount} msgs</span>
+                            ${session.sessionInfo?.cwd || session.filename}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Attach click handlers
+            document.querySelectorAll('.session-item').forEach(item => {
+                item.addEventListener('click', () => selectSession(parseInt(item.dataset.idx)));
+            });
+        };
+
+        const renderMessage = (msg) => {
+            const role = msg.type;
+            const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : '';
+            const content = msg.message?.content;
+
+            let contentHtml = '';
+
+            if (typeof content === 'string') {
+                contentHtml = formatContent(content);
+            } else if (Array.isArray(content)) {
+                for (const block of content) {
+                    if (block.type === 'text') {
+                        contentHtml += formatContent(block.text);
+                    } else if (block.type === 'thinking' && state.showThinking) {
+                        contentHtml += `
+                            <details class="thinking-block">
+                                <summary>💭 Thinking</summary>
+                                <div>${formatContent(block.thinking)}</div>
+                            </details>
+                        `;
+                    } else if (block.type === 'tool_use' && state.showTools) {
+                        contentHtml += `
+                            <div class="tool-block">
+                                <div class="tool-header">🔧 ${escapeHtml(block.name)}</div>
+                                <pre>${escapeHtml(JSON.stringify(block.input, null, 2))}</pre>
+                            </div>
+                        `;
+                    } else if (block.type === 'tool_result' && state.showTools) {
+                        contentHtml += `
+                            <div class="tool-block">
+                                <div class="tool-header">📤 Tool Result</div>
+                                <pre>${formatContent(typeof block.content === 'string' ? block.content : JSON.stringify(block.content, null, 2))}</pre>
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            if (!contentHtml.trim()) return '';
+
+            return `
+                <div class="message ${role}">
+                    <div class="message-header">
+                        <span class="message-role">${role}</span>
+                        <span class="message-time">${timestamp}</span>
+                    </div>
+                    <div class="message-content">${contentHtml}</div>
+                </div>
+            `;
+        };
+
+        const renderMessages = () => {
+            if (state.currentSession === null || !state.sessions[state.currentSession]) {
+                elements.messagesContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📜</div>
+                        <h2>Select a Session</h2>
+                        <p>Choose a conversation from the sidebar</p>
+                    </div>
+                `;
+                elements.statsBar.style.display = 'none';
+                return;
+            }
+
+            const session = state.sessions[state.currentSession];
+            const searchTerm = elements.searchBox.value.toLowerCase();
+            let totalTokens = 0;
+            let firstTimestamp = null;
+            let lastTimestamp = null;
+
+            const filteredMessages = session.messages.filter(msg => {
+                if (!searchTerm) return true;
+                const content = typeof msg.message?.content === 'string'
+                    ? msg.message.content
+                    : (msg.message?.content || []).filter(c => c.type === 'text').map(c => c.text).join('');
+                return content.toLowerCase().includes(searchTerm);
+            });
+
+            const html = filteredMessages.map(msg => {
+                if (msg.message?.usage) {
+                    totalTokens += (msg.message.usage.input_tokens || 0) + (msg.message.usage.output_tokens || 0);
+                }
+                if (msg.timestamp) {
+                    const ts = new Date(msg.timestamp);
+                    if (!firstTimestamp) firstTimestamp = ts;
+                    lastTimestamp = ts;
+                }
+                return renderMessage(msg);
+            }).join('');
+
+            elements.messagesContainer.innerHTML = html || `
+                <div class="empty-state">
+                    <p>No messages match your search</p>
+                </div>
+            `;
+
+            // Update stats
+            elements.statsBar.style.display = 'flex';
+            elements.messageCount.textContent = session.messages.length;
+            elements.tokenCount.textContent = totalTokens.toLocaleString();
+            elements.sessionDuration.textContent = firstTimestamp && lastTimestamp
+                ? `${Math.round((lastTimestamp - firstTimestamp) / 1000 / 60)} min`
+                : '—';
+        };
+
+        // ============================================
+        // Actions
+        // ============================================
+        const selectSession = async (idx) => {
+            state.currentSession = idx;
+            renderSessionList();
+
+            const session = state.sessions[idx];
+            if (session.path && session.messages.length === 0) {
+                elements.messagesContainer.innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <span>Loading session...</span>
+                    </div>
+                `;
+                const messages = await api.loadSession(session.path);
+                if (messages) {
+                    session.messages = messages;
+                    session.sessionInfo = {
+                        ...session.sessionInfo,
+                        id: messages[0]?.sessionId,
+                        cwd: messages[0]?.cwd,
+                    };
+                }
+            }
+
+            renderMessages();
+        };
+
+        const loadFromServer = async () => {
+            const sessions = await api.loadSessions();
+            if (sessions && sessions.length > 0) {
+                state.sessions = sessions.map(s => ({
+                    path: s.path,
+                    filename: s.name,
+                    messages: [],
+                    sessionInfo: {
+                        cwd: s.cwd,
+                        preview: s.preview,
+                        timestamp: s.timestamp,
+                        messageCount: s.messageCount
+                    }
+                }));
+                renderSessionList();
+                return true;
+            }
+            return false;
+        };
+
+        const handleFileInput = async (files) => {
+            state.sessions = [];
+            for (const file of files) {
+                const content = await file.text();
+                const parsed = parseJSONL(content, file.name);
+                if (parsed.messages.length > 0) {
+                    state.sessions.push(parsed);
+                }
+            }
+            renderSessionList();
+            if (state.sessions.length > 0) {
+                selectSession(0);
+            }
+        };
+
+        const handleBackup = async () => {
+            if (!state.isServerMode) {
+                alert('Backup requires server mode.\nRun: claude-history');
+                return;
+            }
+
+            const btn = elements.backupAllBtn;
+            btn.innerHTML = '<span>⏳</span> Backing up...';
+            btn.disabled = true;
+
+            try {
+                const data = await api.backupAll();
+                if (data.error) {
+                    alert('Backup error: ' + data.error);
+                } else {
+                    const count = data.backed_up?.length || 0;
+                    alert(`✅ Backup complete!\n\n${count} sessions saved to:\nclaude-history-viewer/backups/`);
+                }
+            } catch (e) {
+                alert('Backup failed: ' + e.message);
+            } finally {
+                btn.innerHTML = '<span>💾</span> Backup All';
+                btn.disabled = false;
+            }
+        };
+
+        // ============================================
+        // Export Functions
+        // ============================================
+        const exportAsMarkdown = () => {
+            const session = state.sessions[state.currentSession];
+            const includeThinking = document.getElementById('exportIncludeThinking').checked;
+            const includeTools = document.getElementById('exportIncludeTools').checked;
+            const shouldRedact = document.getElementById('exportRedact').checked;
+            const includeMetadata = document.getElementById('exportMetadata').checked;
+
+            let md = `# Claude Code Conversation\n\n`;
+            md += `**Session:** ${session.sessionInfo?.id || 'Unknown'}\n`;
+            md += `**Directory:** ${session.sessionInfo?.cwd || 'Unknown'}\n\n---\n\n`;
+
+            for (const msg of session.messages) {
+                const role = msg.type.toUpperCase();
+                const ts = msg.timestamp ? new Date(msg.timestamp).toLocaleString() : '';
+                md += `## ${role}${includeMetadata ? ` (${ts})` : ''}\n\n`;
+
+                const content = msg.message?.content;
+                if (typeof content === 'string') {
+                    md += (shouldRedact ? redactSensitive(content).replace(/<[^>]+>/g, '[REDACTED]') : content) + '\n\n';
+                } else if (Array.isArray(content)) {
+                    for (const block of content) {
+                        if (block.type === 'text') {
+                            const text = shouldRedact ? redactSensitive(block.text).replace(/<[^>]+>/g, '[REDACTED]') : block.text;
+                            md += text + '\n\n';
+                        } else if (block.type === 'thinking' && includeThinking) {
+                            md += `<details><summary>Thinking</summary>\n\n${block.thinking}\n\n</details>\n\n`;
+                        } else if (block.type === 'tool_use' && includeTools) {
+                            md += `**Tool: ${block.name}**\n\`\`\`json\n${JSON.stringify(block.input, null, 2)}\n\`\`\`\n\n`;
+                        }
+                    }
+                }
+                md += `---\n\n`;
+            }
+
+            downloadFile(md, `claude-${Date.now()}.md`, 'text/markdown');
+        };
+
+        const exportAsJson = () => {
+            const session = state.sessions[state.currentSession];
+            const shouldRedact = document.getElementById('exportRedact').checked;
+            const exportData = JSON.parse(JSON.stringify(session));
+
+            if (shouldRedact) {
+                exportData.messages = exportData.messages.map(msg => {
+                    if (typeof msg.message?.content === 'string') {
+                        msg.message.content = redactSensitive(msg.message.content).replace(/<[^>]+>/g, '[REDACTED]');
+                    } else if (Array.isArray(msg.message?.content)) {
+                        msg.message.content = msg.message.content.map(block => {
+                            if (block.text) block.text = redactSensitive(block.text).replace(/<[^>]+>/g, '[REDACTED]');
+                            if (block.thinking) block.thinking = redactSensitive(block.thinking).replace(/<[^>]+>/g, '[REDACTED]');
+                            return block;
+                        });
+                    }
+                    return msg;
+                });
+            }
+
+            downloadFile(JSON.stringify(exportData, null, 2), `claude-${Date.now()}.json`, 'application/json');
+        };
+
+        // ============================================
+        // Event Listeners
+        // ============================================
+        elements.fileInput.addEventListener('change', (e) => handleFileInput(Array.from(e.target.files)));
+
+        elements.loadDefaultBtn.addEventListener('click', async () => {
+            if (state.isServerMode) {
+                await loadFromServer();
+                if (state.sessions.length > 0) selectSession(0);
+            } else {
+                alert('Server mode required.\nRun: claude-history');
+            }
+        });
+
+        elements.backupAllBtn.addEventListener('click', handleBackup);
+
+        elements.toggleThinking.addEventListener('click', () => {
+            state.showThinking = !state.showThinking;
+            elements.toggleThinking.classList.toggle('active', state.showThinking);
+            renderMessages();
+        });
+
+        elements.toggleTools.addEventListener('click', () => {
+            state.showTools = !state.showTools;
+            elements.toggleTools.classList.toggle('active', state.showTools);
+            renderMessages();
+        });
+
+        elements.toggleRedact.addEventListener('click', () => {
+            state.redactSecrets = !state.redactSecrets;
+            elements.toggleRedact.classList.toggle('active', state.redactSecrets);
+            renderMessages();
+        });
+
+        elements.searchBox.addEventListener('input', renderMessages);
+
+        elements.exportBtn.addEventListener('click', () => {
+            if (state.currentSession === null) {
+                alert('Select a session first');
+                return;
+            }
+            elements.exportModal.classList.add('active');
+        });
+
+        document.getElementById('cancelExport').addEventListener('click', () => {
+            elements.exportModal.classList.remove('active');
+        });
+
+        document.getElementById('confirmExport').addEventListener('click', () => {
+            exportAsMarkdown();
+            elements.exportModal.classList.remove('active');
+        });
+
+        document.getElementById('confirmExportJson').addEventListener('click', () => {
+            exportAsJson();
+            elements.exportModal.classList.remove('active');
+        });
+
+        elements.exportModal.addEventListener('click', (e) => {
+            if (e.target === elements.exportModal) {
+                elements.exportModal.classList.remove('active');
+            }
+        });
+
+        // Drag and drop
+        document.body.addEventListener('dragover', (e) => e.preventDefault());
+        document.body.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.jsonl'));
+            if (files.length > 0) handleFileInput(files);
+        });
+
+        // ============================================
+        // Initialize
+        // ============================================
+        (async () => {
+            if (state.isServerMode) {
+                const loaded = await loadFromServer();
+                if (loaded && state.sessions.length > 0) {
+                    selectSession(0);
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
