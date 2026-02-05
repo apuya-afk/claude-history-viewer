@@ -1,91 +1,103 @@
 # Claude Code History Viewer
 
-A secure, local-only web app to view and export Claude Code conversation history from `~/.claude/projects/**/*.jsonl` files.
+A local web app to browse, search, backup, and manage Claude Code conversation history from `~/.claude/projects/`.
 
 ## Features
 
-- **Local Processing**: All files are processed in your browser. No data is sent to any server.
-- **Secret Redaction**: Automatically detects and redacts API keys, tokens, passwords, and other sensitive information.
-- **Multiple Sessions**: Load and browse multiple conversation sessions.
-- **Search**: Filter messages by keyword.
-- **Export Options**: Export conversations as Markdown or JSON with configurable options.
-- **View Controls**: Toggle visibility of thinking blocks and tool calls.
-- **Mobile Responsive**: Slide-out drawer navigation on mobile devices.
-- **Accessible**: Keyboard navigation, focus indicators, ARIA labels.
+- **Browse Sessions**: View all conversations with previews, timestamps, and message counts
+- **Search**: Filter messages by keyword across conversations
+- **Backup & Restore**: Create timestamped zip backups and restore individual sessions
+- **Delete Conversations**: Remove sessions with confirmation prompt
+- **Export**: Save conversations as Markdown or JSON
+- **Secret Redaction**: Auto-detect and redact API keys, tokens, passwords
+- **Syntax Highlighting**: Code blocks with language detection and copy buttons
+- **Theme Toggle**: Light, dark, and system-preference modes
+- **Keyboard Shortcuts**: Navigate and control the app without a mouse
+- **Mobile Responsive**: Slide-out drawer navigation on small screens
 
 ## Quick Start
 
-### Option 1: Server Mode (Recommended)
-
 ```bash
-# Install and run
-pip install -e .
-claude-history
-```
-
-This starts a local server at http://localhost:8547 that automatically loads sessions from `~/.claude/projects/`.
-
-### Option 2: Development Mode
-
-```bash
+# Install dependencies
 npm install
+
+# Start development server (runs Vite + Python API)
 npm run dev
 ```
 
-Then run `python server.py` in a separate terminal to provide the API.
+Opens automatically at http://localhost:5173 with hot reload.
 
-### Option 3: Production Build
+### Production Build
 
 ```bash
 npm run build
-python server.py
+python3 server.py
 ```
+
+Opens at http://localhost:8547.
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `j` | Next session |
+| `k` | Previous session |
+| `/` | Focus search |
+| `t` | Toggle thinking blocks |
+| `o` | Toggle tool calls |
+| `r` | Toggle redaction |
+| `e` | Export conversation |
+| `Esc` | Close modal/sidebar |
+| `?` | Show all shortcuts |
 
 ## Project Structure
 
 ```
 claude-history-viewer/
 ├── src/
-│   ├── index.html          # Clean HTML structure
+│   ├── index.html
 │   ├── styles/
-│   │   ├── main.css        # Base styles + CSS variables
-│   │   ├── components.css  # Buttons, modals, messages
-│   │   └── responsive.css  # Media queries
+│   │   ├── main.css          # Base styles, CSS variables
+│   │   ├── components.css    # Buttons, modals, messages
+│   │   ├── responsive.css    # Media queries
+│   │   └── enhancements.css  # Themes, toasts, animations
 │   └── ts/
-│       ├── main.ts         # Entry point, initialization
-│       ├── state.ts        # State management
-│       ├── api.ts          # Server API calls
-│       ├── parser.ts       # JSONL parsing
-│       ├── render.ts       # DOM rendering functions
-│       ├── export.ts       # Markdown/JSON export
-│       ├── utils.ts        # escapeHtml, redact, format
-│       ├── icons.ts        # SVG icons (Lucide)
-│       └── types.ts        # TypeScript interfaces
-├── dist/                   # Production build output
-├── server.py               # Python HTTP server
+│       ├── main.ts           # Entry point, event listeners
+│       ├── api.ts            # Server API calls
+│       ├── render.ts         # DOM rendering
+│       ├── state.ts          # App state management
+│       ├── types.ts          # TypeScript interfaces
+│       ├── parser.ts         # JSONL parsing
+│       ├── export.ts         # Markdown/JSON export
+│       ├── utils.ts          # HTML escape, redaction
+│       ├── icons.ts          # SVG icons (Lucide)
+│       ├── theme.ts          # Light/dark mode
+│       ├── keyboard.ts       # Keyboard shortcuts
+│       ├── toast.ts          # Notifications
+│       └── highlight.ts      # Syntax highlighting
+├── server.py                 # Python HTTP server + API
+├── backups/                  # Backup zip files (gitignored)
+├── dist/                     # Production build
 ├── package.json
 ├── tsconfig.json
 └── vite.config.ts
 ```
 
-## Finding Your Conversation Files
+## Backup System
 
-Claude Code stores conversation history in:
-```
-~/.claude/projects/<encoded-project-path>/<session-id>.jsonl
-```
+**Create Backup**: Click "Backup" to create a timestamped zip of all sessions.
 
-To find your files:
-```bash
-find ~/.claude/projects -name "*.jsonl"
-```
+**Browse Backups**: Click "Backups" to see available backups and their contents.
 
-## Security Features
+**Restore**: Select individual sessions from a backup to restore to Claude history.
 
-The viewer automatically redacts:
-- API keys (OpenAI, Anthropic, etc.)
-- AWS credentials
-- GitHub tokens
+Backups are stored in `./backups/` and are not committed to git.
+
+## Security
+
+Auto-redacts sensitive data when enabled:
+- API keys (OpenAI, Anthropic, AWS, GitHub)
+- Tokens and secrets
 - Private keys
 - Database connection strings
 - Email addresses
@@ -93,28 +105,25 @@ The viewer automatically redacts:
 
 ## Privacy
 
-- **No network requests**: The app runs entirely in your browser
+- **Local only**: All processing happens in your browser
 - **No tracking**: No analytics or telemetry
-- **No storage**: Nothing is saved unless you explicitly export
-- **Read-only**: The server never modifies original files
+- **Read-only**: Original files are never modified (backups are copies)
+- **No external requests**: Works completely offline after initial load
 
 ## Development
 
-### Commands
-
 ```bash
-npm run dev        # Start Vite dev server with HMR
-npm run build      # TypeScript check + production build
-npm run typecheck  # Run TypeScript type checking only
-npm run preview    # Preview production build
+npm run dev        # Vite dev server + Python API
+npm run build      # Production build
+npm run typecheck  # TypeScript type checking
 ```
 
 ### Tech Stack
 
-- **TypeScript**: Strict mode enabled for type safety
-- **Vite**: Fast dev server with HMR, optimized production builds
-- **CSS**: Modern CSS with custom properties, no preprocessor needed
-- **Icons**: Inline SVG from Lucide icon set
+- TypeScript (strict mode)
+- Vite (dev server, bundler)
+- Python (HTTP server, file API)
+- CSS custom properties (theming)
 
 ## License
 
