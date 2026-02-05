@@ -1,0 +1,20 @@
+{
+  "name": "claude-history-viewer",
+  "version": "2.0.0",
+  "description": "A local viewer for Claude Code conversation history",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n \"vite,api\" -c \"cyan,magenta\" \"vite\" \"python3 server.py\"",
+    "dev:vite": "vite",
+    "dev:api": "python3 server.py",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12"
+  },
+  "dependencies": {}
+}

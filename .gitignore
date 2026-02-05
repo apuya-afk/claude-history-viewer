@@ -23,9 +23,18 @@ Thumbs.db
 *.swp
 *.swo
 
-# Node (if extending later)
+# Node
 node_modules/
 npm-debug.log
+package-lock.json
+
+# Build output
+dist/
 
 # Logs
 *.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo

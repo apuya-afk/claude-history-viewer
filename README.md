@@ -10,14 +10,63 @@ A secure, local-only web app to view and export Claude Code conversation history
 - **Search**: Filter messages by keyword.
 - **Export Options**: Export conversations as Markdown or JSON with configurable options.
 - **View Controls**: Toggle visibility of thinking blocks and tool calls.
+- **Mobile Responsive**: Slide-out drawer navigation on mobile devices.
+- **Accessible**: Keyboard navigation, focus indicators, ARIA labels.
 
-## Usage
+## Quick Start
 
-1. Open `index.html` in your browser
-2. Click "Load JSONL Files" or drag-and-drop `.jsonl` files from `~/.claude/projects/`
-3. Browse conversations in the sidebar
-4. Use toolbar options to toggle thinking blocks, tool calls, and secret redaction
-5. Export conversations using the Export button
+### Option 1: Server Mode (Recommended)
+
+```bash
+# Install and run
+pip install -e .
+claude-history
+```
+
+This starts a local server at http://localhost:8547 that automatically loads sessions from `~/.claude/projects/`.
+
+### Option 2: Development Mode
+
+```bash
+npm install
+npm run dev
+```
+
+Then run `python server.py` in a separate terminal to provide the API.
+
+### Option 3: Production Build
+
+```bash
+npm run build
+python server.py
+```
+
+## Project Structure
+
+```
+claude-history-viewer/
+├── src/
+│   ├── index.html          # Clean HTML structure
+│   ├── styles/
+│   │   ├── main.css        # Base styles + CSS variables
+│   │   ├── components.css  # Buttons, modals, messages
+│   │   └── responsive.css  # Media queries
+│   └── ts/
+│       ├── main.ts         # Entry point, initialization
+│       ├── state.ts        # State management
+│       ├── api.ts          # Server API calls
+│       ├── parser.ts       # JSONL parsing
+│       ├── render.ts       # DOM rendering functions
+│       ├── export.ts       # Markdown/JSON export
+│       ├── utils.ts        # escapeHtml, redact, format
+│       ├── icons.ts        # SVG icons (Lucide)
+│       └── types.ts        # TypeScript interfaces
+├── dist/                   # Production build output
+├── server.py               # Python HTTP server
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
+```
 
 ## Finding Your Conversation Files
 
@@ -47,10 +96,25 @@ The viewer automatically redacts:
 - **No network requests**: The app runs entirely in your browser
 - **No tracking**: No analytics or telemetry
 - **No storage**: Nothing is saved unless you explicitly export
+- **Read-only**: The server never modifies original files
 
 ## Development
 
-This is a single-file HTML application with no dependencies. Simply edit `index.html` to customize.
+### Commands
+
+```bash
+npm run dev        # Start Vite dev server with HMR
+npm run build      # TypeScript check + production build
+npm run typecheck  # Run TypeScript type checking only
+npm run preview    # Preview production build
+```
+
+### Tech Stack
+
+- **TypeScript**: Strict mode enabled for type safety
+- **Vite**: Fast dev server with HMR, optimized production builds
+- **CSS**: Modern CSS with custom properties, no preprocessor needed
+- **Icons**: Inline SVG from Lucide icon set
 
 ## License
 

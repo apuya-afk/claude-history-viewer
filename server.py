@@ -2,6 +2,9 @@
 """
 Local server for Claude Code History Viewer
 Serves the viewer and provides API access to ~/.claude/projects/ JSONL files
+
+IMPORTANT: This viewer is READ-ONLY. It never writes to or modifies history files.
+Backups are copied to a separate directory within this app's folder.
 """
 
 import http.server
@@ -10,7 +13,10 @@ import os
 import shutil
 import socketserver
 import webbrowser
+import zipfile
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse, parse_qs
 
 PORT = 8547
@@ -19,8 +25,25 @@ BACKUP_DIR = Path(__file__).parent / "backups"
 
 class HistoryHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-        # Serve from the script's directory
-        super().__init__(*args, directory=os.path.dirname(os.path.abspath(__file__)), **kwargs)
+        # Serve from dist/ if it exists (production build), otherwise script's directory
+        script_dir = Path(__file__).parent
+        dist_dir = script_dir / "dist"
+        serve_dir = str(dist_dir) if dist_dir.exists() else str(script_dir)
+        super().__init__(*args, directory=serve_dir, **kwargs)
+
+    def do_DELETE(self):
+        parsed = urlparse(self.path)
+
+        # API: Delete a session
+        if parsed.path == "/api/session":
+            params = parse_qs(parsed.query)
+            if "path" in params:
+                self.send_json(self.delete_session(params["path"][0]))
+                return
+            self.send_error(400, "Missing path parameter")
+            return
+
+        self.send_error(404, "Not Found")
 
     def do_POST(self):
         parsed = urlparse(self.path)
@@ -31,7 +54,7 @@ class HistoryHandler(http.server.SimpleHTTPRequestHandler):
             body = self.rfile.read(content_length).decode('utf-8') if content_length else '{}'
             try:
                 params = json.loads(body)
-            except:
+            except json.JSONDecodeError:
                 params = {}
             self.send_json(self.backup_sessions(params.get('paths', [])))
             return
@@ -66,11 +89,32 @@ class HistoryHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(self.get_backup_status())
             return
 
+        # API: Load sessions from a backup zip (for viewing)
+        if parsed.path == "/api/load-backup":
+            params = parse_qs(parsed.query)
+            if "name" in params:
+                self.send_json(self.load_backup(params["name"][0]))
+                return
+            self.send_error(400, "Missing name parameter")
+            return
+
+        # API: Restore a session from backup to Claude history
+        if parsed.path == "/api/restore-session":
+            params = parse_qs(parsed.query)
+            if "backup" in params and "session" in params:
+                self.send_json(self.restore_session_from_backup(
+                    params["backup"][0],
+                    params["session"][0]
+                ))
+                return
+            self.send_error(400, "Missing backup or session parameter")
+            return
+
         # Serve static files
         super().do_GET()
 
-    def list_sessions(self):
-        """List all JSONL session files"""
+    def list_sessions(self) -> dict[str, Any]:
+        """List all JSONL session files (READ-ONLY operation)"""
         sessions = []
 
         if not CLAUDE_DIR.exists():
@@ -88,24 +132,28 @@ class HistoryHandler(http.server.SimpleHTTPRequestHandler):
                 message_count = 0
                 cwd = ""
 
-                with open(jsonl_file, "r") as f:
-                    for line in f:
-                        try:
-                            obj = json.loads(line)
-                            if obj.get("type") == "user":
-                                message_count += 1
-                                if not preview and obj.get("message", {}).get("content"):
-                                    content = obj["message"]["content"]
-                                    if isinstance(content, str):
-                                        preview = content[:100]
-                                if not timestamp:
-                                    timestamp = obj.get("timestamp")
-                                if not cwd:
-                                    cwd = obj.get("cwd", "")
-                            elif obj.get("type") == "assistant":
-                                message_count += 1
-                        except json.JSONDecodeError:
-                            continue
+                # Read entire file at once and close immediately to avoid holding file handle
+                # This prevents any interference with Claude Code's file operations
+                content = jsonl_file.read_text(encoding="utf-8")
+                for line in content.splitlines():
+                    if not line.strip():
+                        continue
+                    try:
+                        obj = json.loads(line)
+                        if obj.get("type") == "user":
+                            message_count += 1
+                            if not preview and obj.get("message", {}).get("content"):
+                                msg_content = obj["message"]["content"]
+                                if isinstance(msg_content, str):
+                                    preview = msg_content[:100]
+                            if not timestamp:
+                                timestamp = obj.get("timestamp")
+                            if not cwd:
+                                cwd = obj.get("cwd", "")
+                        elif obj.get("type") == "assistant":
+                            message_count += 1
+                    except json.JSONDecodeError:
+                        continue
 
                 # Only include sessions with at least 1 message
                 if message_count > 0:
@@ -125,8 +173,8 @@ class HistoryHandler(http.server.SimpleHTTPRequestHandler):
 
         return {"sessions": sessions}
 
-    def get_session(self, path):
-        """Get contents of a session file with security filtering"""
+    def get_session(self, path: str) -> dict[str, Any]:
+        """Get contents of a session file with security filtering (READ-ONLY operation)"""
         # Security: Ensure path is within CLAUDE_DIR
         try:
             requested_path = Path(path).resolve()
@@ -140,32 +188,55 @@ class HistoryHandler(http.server.SimpleHTTPRequestHandler):
 
         messages = []
         try:
-            with open(requested_path, "r") as f:
-                for line in f:
-                    try:
-                        obj = json.loads(line)
-                        if obj.get("type") in ("user", "assistant"):
-                            # Filter out sensitive fields we don't need
-                            filtered = {
-                                "type": obj.get("type"),
-                                "message": obj.get("message"),
-                                "timestamp": obj.get("timestamp"),
-                                "uuid": obj.get("uuid"),
-                                "sessionId": obj.get("sessionId"),
-                                "cwd": obj.get("cwd"),
-                                "version": obj.get("version"),
-                                "gitBranch": obj.get("gitBranch")
-                            }
-                            messages.append(filtered)
-                    except json.JSONDecodeError:
-                        continue
+            # Read entire file at once and close immediately to avoid holding file handle
+            # This prevents any interference with Claude Code's file operations
+            content = requested_path.read_text(encoding="utf-8")
+            for line in content.splitlines():
+                if not line.strip():
+                    continue
+                try:
+                    obj = json.loads(line)
+                    if obj.get("type") in ("user", "assistant"):
+                        # Filter out sensitive fields we don't need
+                        filtered = {
+                            "type": obj.get("type"),
+                            "message": obj.get("message"),
+                            "timestamp": obj.get("timestamp"),
+                            "uuid": obj.get("uuid"),
+                            "sessionId": obj.get("sessionId"),
+                            "cwd": obj.get("cwd"),
+                            "version": obj.get("version"),
+                            "gitBranch": obj.get("gitBranch")
+                        }
+                        messages.append(filtered)
+                except json.JSONDecodeError:
+                    continue
         except Exception as e:
             return {"error": f"Failed to read session: {str(e)}"}
 
         return {"messages": messages, "path": str(requested_path)}
 
-    def backup_sessions(self, paths):
-        """Backup specific session files"""
+    def delete_session(self, path: str) -> dict[str, Any]:
+        """Delete a session file (PERMANENTLY removes the file)"""
+        # Security: Ensure path is within CLAUDE_DIR
+        try:
+            requested_path = Path(path).resolve()
+            if not str(requested_path).startswith(str(CLAUDE_DIR.resolve())):
+                return {"error": "Access denied: Path outside allowed directory"}
+        except Exception:
+            return {"error": "Invalid path"}
+
+        if not requested_path.exists():
+            return {"error": "Session file not found"}
+
+        try:
+            requested_path.unlink()
+            return {"success": True, "deleted": str(requested_path)}
+        except Exception as e:
+            return {"error": f"Failed to delete: {str(e)}"}
+
+    def backup_sessions(self, paths: list[str]) -> dict[str, Any]:
+        """Backup specific session files (COPIES to backup dir, never modifies originals)"""
         BACKUP_DIR.mkdir(exist_ok=True)
         backed_up = []
         errors = []
@@ -195,34 +266,75 @@ class HistoryHandler(http.server.SimpleHTTPRequestHandler):
 
         return {"backed_up": backed_up, "errors": errors}
 
-    def backup_all_sessions(self):
-        """Backup all session files"""
+    def backup_all_sessions(self) -> dict[str, Any]:
+        """Backup all session files into a single timestamped zip archive"""
         if not CLAUDE_DIR.exists():
             return {"error": "Claude directory not found", "backed_up": [], "errors": []}
 
-        all_paths = []
-        for jsonl_file in CLAUDE_DIR.rglob("*.jsonl"):
-            # Skip subagent files
-            if "/subagents/" in str(jsonl_file):
-                continue
-            all_paths.append(str(jsonl_file))
+        # Create backup directory if needed
+        BACKUP_DIR.mkdir(exist_ok=True)
 
-        return self.backup_sessions(all_paths)
+        # Generate timestamped filename
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        zip_filename = f"claude-history-backup_{timestamp}.zip"
+        zip_path = BACKUP_DIR / zip_filename
 
-    def get_backup_status(self):
-        """Get info about existing backups"""
+        backed_up = []
+        errors = []
+
+        try:
+            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+                for jsonl_file in CLAUDE_DIR.rglob("*.jsonl"):
+                    # Skip subagent files
+                    if "/subagents/" in str(jsonl_file):
+                        continue
+                    try:
+                        # Use relative path within the zip
+                        rel_path = jsonl_file.relative_to(CLAUDE_DIR)
+                        zf.write(jsonl_file, rel_path)
+                        backed_up.append(str(rel_path))
+                    except Exception as e:
+                        errors.append({"path": str(jsonl_file), "error": str(e)})
+
+            # Get final zip size
+            zip_size = zip_path.stat().st_size
+            zip_size_mb = round(zip_size / (1024 * 1024), 2)
+
+            return {
+                "backed_up": backed_up,
+                "errors": errors,
+                "archive": str(zip_path),
+                "archive_name": zip_filename,
+                "archive_size_mb": zip_size_mb,
+                "session_count": len(backed_up)
+            }
+
+        except Exception as e:
+            return {"error": str(e), "backed_up": [], "errors": []}
+
+    def get_backup_status(self) -> dict[str, Any]:
+        """Get info about existing backup zip files"""
         if not BACKUP_DIR.exists():
             return {"backups": [], "total_size": 0}
 
         backups = []
         total_size = 0
 
-        for backup_file in BACKUP_DIR.glob("*.jsonl"):
+        for backup_file in BACKUP_DIR.glob("*.zip"):
             stat = backup_file.stat()
+            # Count sessions in zip
+            try:
+                with zipfile.ZipFile(backup_file, 'r') as zf:
+                    session_count = len([n for n in zf.namelist() if n.endswith('.jsonl')])
+            except:
+                session_count = 0
+
             backups.append({
                 "name": backup_file.name,
                 "size": stat.st_size,
-                "modified": stat.st_mtime
+                "size_mb": round(stat.st_size / (1024 * 1024), 2),
+                "modified": stat.st_mtime,
+                "session_count": session_count
             })
             total_size += stat.st_size
 
@@ -230,11 +342,106 @@ class HistoryHandler(http.server.SimpleHTTPRequestHandler):
 
         return {"backups": backups, "total_size": total_size}
 
-    def send_json(self, data):
+    def restore_session_from_backup(self, backup_name: str, session_path: str) -> dict[str, Any]:
+        """Restore a specific session from a backup zip to the Claude history directory"""
+        if not backup_name or '..' in backup_name:
+            return {"error": "Invalid backup name"}
+        if not session_path or '..' in session_path:
+            return {"error": "Invalid session path"}
+
+        backup_path = BACKUP_DIR / backup_name
+        if not backup_path.exists() or not backup_path.suffix == '.zip':
+            return {"error": "Backup not found"}
+
+        try:
+            with zipfile.ZipFile(backup_path, 'r') as zf:
+                if session_path not in zf.namelist():
+                    return {"error": "Session not found in backup"}
+
+                # Determine target path
+                target_path = CLAUDE_DIR / session_path
+
+                # Check if file already exists
+                if target_path.exists():
+                    return {"error": "Session already exists in Claude history. Delete it first if you want to restore."}
+
+                # Create parent directories if needed
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+
+                # Extract the file
+                content = zf.read(session_path)
+                target_path.write_bytes(content)
+
+                return {"success": True, "restored_to": str(target_path)}
+
+        except Exception as e:
+            return {"error": str(e)}
+
+    def load_backup(self, backup_name: str) -> dict[str, Any]:
+        """Load sessions from a backup zip file"""
+        if not backup_name or '..' in backup_name:
+            return {"error": "Invalid backup name"}
+
+        backup_path = BACKUP_DIR / backup_name
+        if not backup_path.exists() or not backup_path.suffix == '.zip':
+            return {"error": "Backup not found"}
+
+        sessions = []
+        try:
+            with zipfile.ZipFile(backup_path, 'r') as zf:
+                for name in zf.namelist():
+                    if not name.endswith('.jsonl'):
+                        continue
+                    try:
+                        content = zf.read(name).decode('utf-8')
+                        lines = content.strip().split('\n')
+
+                        # Parse to get preview and metadata
+                        messages = []
+                        preview = ""
+                        timestamp = None
+                        cwd = None
+
+                        for line in lines:
+                            try:
+                                obj = json.loads(line)
+                                if obj.get('type') in ('user', 'assistant'):
+                                    messages.append(obj)
+                                    if not preview and obj.get('type') == 'user':
+                                        content_val = obj.get('message', {}).get('content', '')
+                                        if isinstance(content_val, str):
+                                            preview = content_val[:100]
+                                    if not timestamp and obj.get('timestamp'):
+                                        timestamp = obj['timestamp']
+                                    if not cwd and obj.get('cwd'):
+                                        cwd = obj['cwd']
+                            except:
+                                continue
+
+                        if messages:
+                            sessions.append({
+                                "name": name,
+                                "path": f"backup:{backup_name}:{name}",
+                                "preview": preview,
+                                "timestamp": timestamp,
+                                "cwd": cwd,
+                                "messageCount": len(messages),
+                                "messages": messages  # Include full messages
+                            })
+                    except Exception as e:
+                        continue
+
+            sessions.sort(key=lambda x: x.get('timestamp') or '', reverse=True)
+            return {"sessions": sessions, "backup_name": backup_name}
+
+        except Exception as e:
+            return {"error": str(e)}
+
+    def send_json(self, data: dict[str, Any]) -> None:
         """Send JSON response"""
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Origin", "http://localhost:8547")
         self.end_headers()
         self.wfile.write(json.dumps(data).encode())
 
