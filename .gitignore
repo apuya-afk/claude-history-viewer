@@ -2,6 +2,7 @@
 *.jsonl
 exports/
 saved/
+backups/
 *.env
 .env*
 secrets/
