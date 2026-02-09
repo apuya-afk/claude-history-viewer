@@ -5,28 +5,29 @@
 /* ============================================
    Light Theme Variables
    ============================================ */
+/* "Warm Parchment" light theme */
 [data-theme='light'] {
-  --bg-primary: #f8f9fa;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f1f3f4;
-  --bg-elevated: #e8eaed;
-  --text-primary: #1a1a2e;
-  --text-secondary: #5f6368;
-  --text-muted: #9aa0a6;
-  --accent: #6366f1;
-  --accent-hover: #4f46e5;
-  --accent-glow: rgba(99, 102, 241, 0.2);
+  --bg-primary: #F7F3EC;
+  --bg-secondary: #FFFDF8;
+  --bg-tertiary: #EDE8E0;
+  --bg-elevated: #E3DDD4;
+  --text-primary: #1A1816;
+  --text-secondary: #6B6560;
+  --text-muted: #A09890;
+  --accent: #B45309;
+  --accent-hover: #92400E;
+  --accent-glow: rgba(180, 83, 9, 0.18);
   --success: #059669;
-  --success-glow: rgba(5, 150, 105, 0.2);
-  --warning: #d97706;
-  --danger: #dc2626;
-  --user-bg: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  --assistant-bg: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-  --border: rgba(0, 0, 0, 0.1);
-  --border-hover: rgba(0, 0, 0, 0.2);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --success-glow: rgba(5, 150, 105, 0.18);
+  --warning: #D97706;
+  --danger: #DC2626;
+  --user-bg: linear-gradient(135deg, #E0E7F0 0%, #D5DDE8 100%);
+  --assistant-bg: linear-gradient(135deg, #F0EDE6 0%, #E8E4DC 100%);
+  --border: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 /* ============================================
@@ -157,61 +158,63 @@
 /* ============================================
    Syntax Highlighting
    ============================================ */
+/* Dark syntax — warm amber palette */
 .hl-keyword {
-  color: #c678dd;
+  color: #E879A0;
 }
 
 .hl-type {
-  color: #e5c07b;
+  color: #D4943A;
 }
 
 .hl-builtin {
-  color: #61afef;
+  color: #5EEAD4;
 }
 
 .hl-string {
-  color: #98c379;
+  color: #34D399;
 }
 
 .hl-number {
-  color: #d19a66;
+  color: #E8AC55;
 }
 
 .hl-comment {
-  color: #5c6370;
+  color: #5C5A6E;
   font-style: italic;
 }
 
 .hl-function {
-  color: #61afef;
+  color: #5EEAD4;
 }
 
+/* Light syntax — warm parchment palette */
 [data-theme='light'] .hl-keyword {
-  color: #a626a4;
+  color: #BE185D;
 }
 
 [data-theme='light'] .hl-type {
-  color: #c18401;
+  color: #92400E;
 }
 
 [data-theme='light'] .hl-builtin {
-  color: #4078f2;
+  color: #0F766E;
 }
 
 [data-theme='light'] .hl-string {
-  color: #50a14f;
+  color: #15803D;
 }
 
 [data-theme='light'] .hl-number {
-  color: #986801;
+  color: #B45309;
 }
 
 [data-theme='light'] .hl-comment {
-  color: #a0a1a7;
+  color: #A09890;
 }
 
 [data-theme='light'] .hl-function {
-  color: #4078f2;
+  color: #0F766E;
 }
 
 /* ============================================
@@ -234,11 +237,12 @@
 }
 
 .code-block-lang {
-  font-size: 11px;
-  font-weight: 500;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .copy-btn {
@@ -250,7 +254,8 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 10px;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -367,9 +372,29 @@
 .skeleton-message-line:nth-child(3) { width: 75%; }
 
 /* ============================================
-   Staggered Animations (disabled for now - causing visibility issues)
+   Message Entrance Animations
    ============================================ */
-/* Session items and messages are visible by default, animations optional */
+.message {
+  animation: messageIn 0.35s ease-out both;
+}
+
+@keyframes messageIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message:nth-child(1) { animation-delay: 0.02s; }
+.message:nth-child(2) { animation-delay: 0.05s; }
+.message:nth-child(3) { animation-delay: 0.08s; }
+.message:nth-child(4) { animation-delay: 0.11s; }
+.message:nth-child(5) { animation-delay: 0.14s; }
+.message:nth-child(n+6) { animation-delay: 0.16s; }
 
 /* ============================================
    Button Micro-interactions
@@ -456,7 +481,7 @@
   background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
   color: var(--text-primary);
@@ -481,46 +506,66 @@
    Light Mode Contrast Fixes
    ============================================ */
 [data-theme='light'] .toolbar-btn:hover {
-  background: #e2e5e9;
+  background: #E3DDD4;
 }
 
 [data-theme='light'] .toolbar-btn.active {
   background: var(--accent);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  color: white;
+  box-shadow: 0 2px 8px rgba(180, 83, 9, 0.3);
 }
 
 [data-theme='light'] .toolbar-btn-danger:hover {
-  background: rgba(220, 38, 38, 0.12);
+  background: rgba(220, 38, 38, 0.1);
 }
 
 [data-theme='light'] .btn:hover {
-  background: #e2e5e9;
+  background: #E3DDD4;
 }
 
 [data-theme='light'] .session-item:hover {
-  background: #e8eaed;
+  background: #E3DDD4;
 }
 
 [data-theme='light'] .session-item.active {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%);
-  border-color: rgba(99, 102, 241, 0.3);
+  background: linear-gradient(135deg, rgba(180, 83, 9, 0.12) 0%, rgba(180, 83, 9, 0.06) 100%);
+  border-color: rgba(180, 83, 9, 0.3);
 }
 
 [data-theme='light'] .backup-item:hover,
 [data-theme='light'] .backup-session-item:hover {
-  background: #e2e5e9;
+  background: #E3DDD4;
 }
 
 [data-theme='light'] .backup-item.selected {
   background: var(--accent);
+  color: white;
 }
 
 [data-theme='light'] .modal-option:hover {
-  background: #e2e5e9;
+  background: #E3DDD4;
 }
 
 [data-theme='light'] .code-block-header {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme='light'] .banner {
+  background: linear-gradient(90deg, #B45309 0%, #92400E 100%);
+  color: #FFFDF8;
+}
+
+[data-theme='light'] .logo-icon {
+  background: linear-gradient(135deg, #B45309 0%, #92400E 100%);
+  color: white;
+}
+
+[data-theme='light'] .btn-primary {
+  color: white;
+}
+
+[data-theme='light'] .btn-success {
+  color: white;
 }
 
 /* ============================================

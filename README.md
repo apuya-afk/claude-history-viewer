@@ -11,7 +11,7 @@ A local web app to browse, search, backup, and manage Claude Code conversation h
 - **Export**: Save conversations as Markdown or JSON
 - **Secret Redaction**: Auto-detect and redact API keys, tokens, passwords
 - **Syntax Highlighting**: Code blocks with language detection and copy buttons
-- **Theme Toggle**: Light, dark, and system-preference modes
+- **Theme Toggle**: Light ("Warm Parchment"), dark ("Amber Archive"), and system-preference modes
 - **Keyboard Shortcuts**: Navigate and control the app without a mouse
 - **Mobile Responsive**: Slide-out drawer navigation on small screens
 
@@ -76,6 +76,7 @@ claude-history-viewer/
 │       ├── toast.ts          # Notifications
 │       └── highlight.ts      # Syntax highlighting
 ├── server.py                 # Python HTTP server + API
+├── CLAUDE.md                 # Claude Code project context & aesthetics prompt
 ├── backups/                  # Backup zip files (gitignored)
 ├── dist/                     # Production build
 ├── package.json
@@ -108,7 +109,7 @@ Auto-redacts sensitive data when enabled:
 - **Local only**: All processing happens in your browser
 - **No tracking**: No analytics or telemetry
 - **Read-only**: Original files are never modified (backups are copies)
-- **No external requests**: Works completely offline after initial load
+- **Minimal external requests**: Google Fonts loaded on initial page load; works offline after cached
 
 ## Development
 
@@ -124,6 +125,7 @@ npm run typecheck  # TypeScript type checking
 - Vite (dev server, bundler)
 - Python (HTTP server, file API)
 - CSS custom properties (theming)
+- Google Fonts (Newsreader, Outfit, JetBrains Mono)
 
 ## License
 

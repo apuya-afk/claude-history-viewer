@@ -45,8 +45,10 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, #C17817 100%);
   border: none;
+  color: #0C0B0E;
+  font-weight: 600;
   box-shadow: 0 4px 12px var(--accent-glow);
 }
 
@@ -57,6 +59,8 @@
 .btn-success {
   background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
   border: none;
+  color: #0C0B0E;
+  font-weight: 600;
   box-shadow: 0 4px 12px var(--success-glow);
 }
 
@@ -67,11 +71,13 @@
 .btn-danger {
   background: linear-gradient(135deg, var(--danger) 0%, #b91c1c 100%);
   border: none;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(248, 113, 113, 0.3);
 }
 
 .btn-danger:hover {
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 6px 20px rgba(248, 113, 113, 0.4);
 }
 
 .btn-group {
@@ -214,6 +220,7 @@
 }
 
 .stat-value {
+  font-family: var(--font-mono);
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -337,9 +344,11 @@
 }
 
 .modal h2 {
-  font-size: 18px;
+  font-family: var(--font-display);
+  font-size: 20px;
   margin-bottom: 20px;
-  font-weight: 600;
+  font-weight: 500;
+  font-style: italic;
 }
 
 .modal-option {
